@@ -4,20 +4,18 @@ const express = require('express');
 const axios = require('axios');
 const cors = require('cors');
 const https = require('https');
+const path = require('path');
 
 const app = express();
 app.use(cors());
-// Tự động chuyển người dùng trên điện thoại sang mobile.html
-app.get('/', (req, res, next) => {
-  const ua = req.headers['user-agent'] || '';
-  const isMobile = /mobile|iphone|ipod|android|blackberry|opera mini|iemobile|wpdesktop/i.test(ua);
-  if (isMobile) {
-    return res.sendFile(__dirname + '/public/mobile.html');
-  }
-  next();
-});
 
-app.use(express.static('public'));
+// Phục vụ tài nguyên tĩnh trong thư mục public
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Trả về file giao diện mobile.html cho cả desktop lẫn mobile khi vào trang chủ
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'mobile.html'));
+});
 
 const BASE_URL = 'https://monitoring.solarviet.vn/dist/server/api/CodeIgniter/index.php/Senergytec/web/v2/Inverterapi';
 
@@ -83,7 +81,13 @@ app.get('/api/live', async (req, res) => {
   }
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Solar Realtime Dashboard: http://localhost:${PORT}`);
-});
+// Cho phép chạy local
+const PORT = process.env.PORT || 3000;
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Solar Realtime Dashboard: http://localhost:${PORT}`);
+  });
+}
+
+// Bắt buộc export cho Vercel Serverless
+module.exports = app;
