@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Senergy SE 6K - Hybrid SCADA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-app: #080c16;
+      --card-bg: rgba(15, 23, 42, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+
+      --c-pv: #f59e0b;
+      --c-pv-bg: rgba(245, 158, 11, 0.12);
+      --c-bat: #10b981;
+      --c-bat-bg: rgba(16, 185, 129, 0.12);
+      --c-load: #38bdf8;
+      --c-load-bg: rgba(56, 189, 248, 0.12);
+      --c-grid: #94a3b8;
+      --c-grid-active: #f43f5e;
+      --c-core: #6366f1;
+
+      --font-ui: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background-color: var(--bg-app);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 0% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+      color: #f8fafc;
+      font-family: var(--font-ui);
+      padding: 24px;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1200px; margin: 0 auto; }
+
+    /* HEADER */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--card-border);
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 12px; }
+    .brand-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: linear-gradient(135deg, #4f46e5, #0ea5e9);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    }
+    .brand-icon svg { width: 22px; height: 22px; fill: #fff; }
+    .brand-info h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; }
+    .brand-sn { font-family: var(--font-mono); font-size: 0.75rem; color: #64748b; }
+
+    .meta-group { display: flex; align-items: center; gap: 14px; }
+    .refresh-badge { font-size: 0.8rem; color: #94a3b8; font-family: var(--font-mono); }
+    .status-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px; border-radius: 99px;
+      font-size: 0.8rem; font-weight: 700;
+      background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399;
+    }
+    .pulse-dot {
+      width: 8px; height: 8px; border-radius: 50%; background: #10b981;
+      box-shadow: 0 0 10px #10b981; animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+    /* ==============================================================
+       1. DESKTOP STAGE (CHUẨN 3 CỘT NGUYÊN BẢN)
+       ============================================================== */
+    #desktop-stage {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 20px 50px -15px rgba(0,0,0,0.6);
+      height: 540px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .busbar-canvas {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .bus-wire { stroke: rgba(255, 255, 255, 0.08); stroke-width: 4; fill: none; stroke-linecap: round; }
+    .bus-flow {
+      stroke-width: 4; stroke-linecap: round; fill: none; opacity: 0;
+      stroke-dasharray: 8 16; transition: opacity 0.4s ease;
+      animation: busTravel 1.2s linear infinite;
+    }
+    .bus-flow.active { opacity: 1; }
+    .bus-flow.reverse { animation: busTravelRev 1.2s linear infinite; }
+
+    @keyframes busTravel { from { stroke-dashoffset: 48; } to { stroke-dashoffset: 0; } }
+    @keyframes busTravelRev { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 48; } }
+
+    .dev-card {
+      position: absolute;
+      background: #0d1424;
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      z-index: 2;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      transition: all 0.25s ease;
+    }
+    .dev-card:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.2); }
+
+    .dev-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .dev-title-wrap { display: flex; align-items: center; gap: 8px; }
+    .dev-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .dev-icon svg { width: 18px; height: 18px; }
+    .dev-name { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.05em; }
+    .dev-power { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
+
+    .dev-subinfo {
+      margin-top: 8px; padding: 5px 8px; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;
+    }
+    .subinfo-grid { background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.2); color: #cbd5e1; }
+
+    #cardPV { top: 40px; left: 50px; width: 260px; border-color: rgba(245, 158, 11, 0.35); }
+    #cardPV .dev-icon { background: var(--c-pv-bg); }
+    #cardPV .dev-icon svg { fill: var(--c-pv); }
+    #cardPV .dev-power { color: var(--c-pv); }
+
+    #cardGrid { bottom: 40px; left: 50px; width: 260px; border-color: rgba(148, 163, 184, 0.25); }
+    #cardGrid .dev-icon { background: rgba(148, 163, 184, 0.1); }
+    #cardGrid .dev-icon svg { fill: var(--c-grid); }
+    #cardGrid .dev-power { color: var(--c-grid); }
+
+    #cardInv {
+      top: 155px; left: 450px; width: 300px;
+      background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #090e1c 100%);
+      border: 1.5px solid rgba(99, 102, 241, 0.45);
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.25);
+      text-align: center; padding: 22px 20px; border-radius: 22px;
+    }
+    .inv-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(99, 102, 241, 0.35);
+      padding: 4px 12px; border-radius: 99px; font-size: 0.72rem; font-weight: 700; color: #c7d2fe;
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .inv-val { font-family: var(--font-mono); font-size: 2rem; font-weight: 800; color: #fff; }
+    .inv-sub { font-size: 0.75rem; color: #94a3b8; margin-top: 6px; }
+
+    #cardLoad { top: 40px; right: 50px; width: 285px; border-color: rgba(56, 189, 248, 0.35); }
+    #cardLoad .dev-icon { background: var(--c-load-bg); }
+    #cardLoad .dev-icon svg { fill: var(--c-load); }
+    #cardLoad .dev-power { color: var(--c-load); }
+
+    #cardBat { bottom: 30px; right: 50px; width: 300px; border-color: rgba(16, 185, 129, 0.35); }
+    #cardBat .dev-icon { background: var(--c-bat-bg); }
+    #cardBat .dev-icon svg { fill: var(--c-bat); }
+    #cardBat .dev-power { color: var(--c-bat); }
+
+    .soc-track { background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 10px; }
+    .soc-fill { height: 100%; background: var(--c-bat); width: 0%; box-shadow: 0 0 10px var(--c-bat); transition: width 0.8s ease; }
+    .bat-meta { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: #94a3b8; margin-top: 5px; }
+
+    .battery-lifecycle-box {
+      margin-top: 8px; padding: 6px 10px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .lifecycle-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
+    .cycle-bar-bg { background: rgba(255, 255, 255, 0.06); height: 4px; border-radius: 2px; overflow: hidden; }
+    .cycle-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #06b6d4); width: 0%; transition: width 0.8s ease; }
+
+    .est-badge {
+      margin-top: 8px; padding: 5px 8px; border-radius: 6px;
+      background: rgba(16, 185, 129, 0.08); border: 1px dashed rgba(16, 185, 129, 0.3);
+      font-size: 0.72rem; color: #34d399; font-weight: 600; text-align: center;
+    }
+
+    /* METRICS ROW CHUNG */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .metric-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      backdrop-filter: blur(12px);
+    }
+    .metric-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #94a3b8; letter-spacing: 0.06em; margin-bottom: 8px; }
+    .metric-num { font-family: var(--font-mono); font-size: 1.85rem; font-weight: 800; color: #fff; }
+    .metric-num.human { font-family: var(--font-ui); font-size: 1.05rem; color: #38bdf8; font-weight: 600; line-height: 1.4; }
+    .metric-unit { font-size: 0.9rem; color: #64748b; margin-left: 4px; font-family: var(--font-ui); }
+
+    .footer-bar {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 14px; padding: 12px 20px; font-size: 0.85rem; color: #94a3b8;
+      flex-wrap: wrap; gap: 8px;
+    }
+    .tag-fresh { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; }
+
+    /* ==============================================================
+       2. MOBILE FLOW STAGE: SOLAR & LƯỚI Ở TRÊN -> TẢI & PIN Ở DƯỚI
+       ============================================================== */
+    #mobile-stage { display: none; }
+
+    @media (max-width: 900px) {
+      body { padding: 12px 10px 24px; }
+      .container { max-width: 440px; }
+
+      #desktop-stage { display: none !important; }
+      #mobile-stage {
+        display: block !important;
+        position: relative;
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 28px;
+        height: 520px;
+        box-shadow: 0 20px 45px -15px rgba(0,0,0,0.7);
+        backdrop-filter: blur(24px);
+        margin-bottom: 16px;
+        overflow: hidden;
+      }
+
+      .mob-flow-svg {
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        pointer-events: none;
+        z-index: 1;
+      }
+      .mob-wire { stroke: rgba(255, 255, 255, 0.08); stroke-width: 3.5; fill: none; stroke-linecap: round; }
+      .mob-stream {
+        stroke-width: 3.5; stroke-linecap: round; fill: none; opacity: 0;
+        stroke-dasharray: 8 16; transition: opacity 0.4s ease;
+        animation: busTravel 1.2s linear infinite;
+      }
+      .mob-stream.active { opacity: 1; }
+      .mob-stream.reverse { animation: busTravelRev 1.2s linear infinite; }
+
+      /* Inverter trung tâm Mobile */
+      .mob-core {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        width: 126px; height: 126px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #1e1b4b 0%, #080d1a 85%);
+        border: 2px solid rgba(99, 102, 241, 0.55);
+        box-shadow: 0 0 35px rgba(99, 102, 241, 0.35), inset 0 0 18px rgba(99, 102, 241, 0.25);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 3;
+        text-align: center;
+      }
+      .mob-ring {
+        position: absolute;
+        top: -6px; left: -6px; right: -6px; bottom: -6px;
+        border: 1px dashed rgba(99, 102, 241, 0.35);
+        border-radius: 50%;
+        animation: spinCore 24s linear infinite;
+        pointer-events: none;
+      }
+      @keyframes spinCore { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+      .mob-node {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        background: rgba(10, 15, 29, 0.94);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        padding: 9px 12px;
+        z-index: 2;
+        backdrop-filter: blur(14px);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.5);
+      }
+      .mob-node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+      .mob-node-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
+      .mob-node-val { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
+
+      /* ==============================================
+         TỌA ĐỘ 2 TRÊN (NGUỒN) - 1 GIỮA - 2 DƯỚI (ĐÍCH)
+         ============================================== */
+      /* 1. Solar (Trên Trái) */
+      #mobPV { top: 15%; left: 26%; width: 162px; border-color: rgba(245, 158, 11, 0.4); }
+      #mobPV .mob-node-title { color: var(--c-pv); }
+      #mobPV .mob-node-val { color: var(--c-pv); text-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
+
+      /* 2. Điện Lưới (Trên Phải) */
+      #mobGrid { top: 15%; left: 74%; width: 162px; border-color: rgba(148, 163, 184, 0.3); }
+      #mobGrid .mob-node-title { color: #94a3b8; }
+      #mobGrid .mob-node-val { color: #cbd5e1; }
+
+      /* 3. Pin 294Ah (Dưới Trái) */
+      #mobBat { top: 85%; left: 26%; width: 162px; border-color: rgba(16, 185, 129, 0.4); }
+      #mobBat .mob-node-title { color: var(--c-bat); }
+      #mobBat .mob-node-val { color: var(--c-bat); text-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+
+      /* 4. Tải Nhà (Dưới Phải) */
+      #mobLoad { top: 85%; left: 74%; width: 162px; border-color: rgba(56, 189, 248, 0.4); }
+      #mobLoad .mob-node-title { color: var(--c-load); }
+      #mobLoad .mob-node-val { color: var(--c-load); text-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+
+      .metrics-row {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 10px !important;
+        margin-bottom: 16px;
+      }
+      .metric-card { padding: 12px 14px; border-radius: 16px; }
+      .metric-num { font-size: 1.45rem; }
+      .metric-num.human { font-size: 0.95rem; }
+
+      .topbar { margin-bottom: 16px; }
+      .footer-bar { flex-direction: column; align-items: flex-start; gap: 6px; font-size: 0.78rem; padding: 10px 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <header class="topbar">
+      <div class="brand-group">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h8l-2 8 10-12h-8l2-8z"/></svg>
+        </div>
+        <div class="brand-info">
+          <h1>SE 6K Green Hybrid</h1>
+          <div class="brand-sn">2547-38802597PH</div>
+        </div>
+      </div>
+      <div class="meta-group">
+        <span class="refresh-badge">Cập nhật sau: <strong class="valTimer" style="color: #38bdf8;">10</strong>s</span>
+        <div class="status-pill">
+          <span class="pulse-dot"></span>
+          <span>ONLINE</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==============================================================
+         1. DESKTOP STAGE (CHUẨN 3 CỘT KHÔNG ĐỔI)
+         ============================================================== -->
+    <main id="desktop-stage">
+      <svg class="busbar-canvas" viewBox="0 0 1200 540">
+        <defs>
+          <filter id="glowPV"><feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="rgba(245, 158, 11, 0.6)"/></filter>
+          <filter id="glowBat"><feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="rgba(16, 185, 129, 0.6)"/></filter>
+          <filter id="glowLoad"><feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="rgba(56, 189, 248, 0.6)"/></filter>
+          <filter id="glowGrid"><feDropShadow dx="0" dy="0" stdDeviation="4" flood-color="rgba(244, 63, 94, 0.6)"/></filter>
+        </defs>
+
+        <path d="M 310 95 L 400 95 L 450 210" class="bus-wire" />
+        <path d="M 310 95 L 400 95 L 450 210" class="bus-flow streamPV" stroke="var(--c-pv)" filter="url(#glowPV)" />
+
+        <path d="M 310 425 L 400 425 L 450 320" class="bus-wire" />
+        <path d="M 310 425 L 400 425 L 450 320" class="bus-flow streamGrid" stroke="var(--c-grid-active)" filter="url(#glowGrid)" />
+
+        <path d="M 750 210 L 800 95 L 865 95" class="bus-wire" />
+        <path d="M 750 210 L 800 95 L 865 95" class="bus-flow streamLoad" stroke="var(--c-load)" filter="url(#glowLoad)" />
+
+        <path d="M 750 320 L 800 425 L 850 425" class="bus-wire" />
+        <path d="M 750 320 L 800 425 L 850 425" class="bus-flow streamBat" stroke="var(--c-bat)" filter="url(#glowBat)" />
+      </svg>
+
+      <section class="dev-card" id="cardPV">
+        <div class="dev-header">
+          <div class="dev-title-wrap">
+            <div class="dev-icon">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="var(--c-pv)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <span class="dev-name">Dàn Pin Solar</span>
+          </div>
+        </div>
+        <div class="dev-power valPV">0 W</div>
+      </section>
+
+      <section class="dev-card" id="cardGrid">
+        <div class="dev-header">
+          <div class="dev-title-wrap">
+            <div class="dev-icon">
+              <svg viewBox="0 0 24 24"><path d="M4 22h16M12 2v20M8 8l8 0M6 14l12 0M5 19l14 0" stroke="var(--c-grid)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <span class="dev-name">Điện Lưới</span>
+          </div>
+          <span style="font-size: 0.72rem; color: #64748b;" class="gridStatus">Bám tải</span>
+        </div>
+        <div class="dev-power valGrid">0 W</div>
+        <div class="dev-subinfo subinfo-grid">
+          <span>Hôm nay lấy:</span>
+          <strong class="valGridInToday" style="color: #f8fafc; font-family: var(--font-mono);">0.00 kWh</strong>
+        </div>
+      </section>
+
+      <section class="dev-card" id="cardInv">
+        <div class="inv-chip">⚡ HYBRID INVERTER</div>
+        <div class="inv-val valInv">0.00 kW</div>
+        <div class="inv-sub">Nhiệt độ máy: <strong class="invTemp" style="color: #fff;">40</strong>°C</div>
+      </section>
+
+      <section class="dev-card" id="cardLoad">
+        <div class="dev-header">
+          <div class="dev-title-wrap">
+            <div class="dev-icon">
+              <svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1v-9.5z" stroke="var(--c-load)" stroke-width="2" fill="none"/></svg>
+            </div>
+            <span class="dev-name">Tải Tiêu Thụ Nhà</span>
+          </div>
+        </div>
+        <div class="dev-power valLoad">0 W</div>
+      </section>
+
+      <section class="dev-card" id="cardBat">
+        <div class="dev-header">
+          <div class="dev-title-wrap">
+            <div class="dev-icon">
+              <svg viewBox="0 0 24 24"><rect x="2" y="7" width="16" height="10" rx="2" stroke="var(--c-bat)" stroke-width="2" fill="none"/><line x1="20" y1="10" x2="20" y2="14" stroke="var(--c-bat)" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <span class="dev-name">Pin 294Ah</span>
+          </div>
+          <span style="font-size: 0.72rem; color: #94a3b8;" class="batTemp">31°C</span>
+        </div>
+        <div class="dev-power valBat">0 W</div>
+        
+        <div class="soc-track">
+          <div class="soc-fill socBar"></div>
+        </div>
+        <div class="bat-meta">
+          <span class="batState" style="color: #34d399;">Standby</span>
+          <span class="socVal" style="font-family: var(--font-mono); color: #fff;">--%</span>
+        </div>
+
+        <div class="battery-lifecycle-box">
+          <div class="lifecycle-row">
+            <span>Sức khỏe: <strong class="batSOH" style="color: #34d399;">100%</strong></span>
+            <span>Độ chai: <strong class="batDegradation" style="color: #38bdf8;">0.0%</strong></span>
+          </div>
+          <div class="lifecycle-row" style="margin-top: 2px;">
+            <span>Chu kỳ: <strong class="batCycles" style="color: #f8fafc; font-family: var(--font-mono);">8</strong> / 10.000</span>
+            <span class="cyclePercentText" style="color: #94a3b8;">0.08%</span>
+          </div>
+          <div class="cycle-bar-bg">
+            <div class="cycle-bar-fill cycleBar"></div>
+          </div>
+        </div>
+
+        <div class="est-badge chargeEstimate">Đang tính toán...</div>
+      </section>
+    </main>
+
+    <!-- ==============================================================
+         2. MOBILE STAGE: 2 TRÊN (NGUỒN) -> 1 GIỮA -> 2 DƯỚI (ĐÍCH)
+         ============================================================== -->
+    <main id="mobile-stage">
+      <svg class="mob-flow-svg" viewBox="0 0 380 520" preserveAspectRatio="none">
+        <defs>
+          <filter id="mGlowPV"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(245, 158, 11, 0.75)"/></filter>
+          <filter id="mGlowBat"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(16, 185, 129, 0.75)"/></filter>
+          <filter id="mGlowLoad"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(56, 189, 248, 0.75)"/></filter>
+          <filter id="mGlowGrid"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(244, 63, 94, 0.75)"/></filter>
+        </defs>
+
+        <!-- 1. Dây Solar -> Inverter (Trên trái -> Rót xuống Tâm) -->
+        <path d="M 110 120 L 150 205" class="mob-wire" />
+        <path d="M 110 120 L 150 205" class="mob-stream streamPV" stroke="var(--c-pv)" filter="url(#mGlowPV)" />
+
+        <!-- 2. Dây Lưới <-> Inverter (Trên phải <-> Rót xuống Tâm) -->
+        <path d="M 270 120 L 230 205" class="mob-wire" />
+        <path d="M 270 120 L 230 205" class="mob-stream streamGrid" stroke="var(--c-grid-active)" filter="url(#mGlowGrid)" />
+
+        <!-- 3. Dây Inverter <-> Pin 294Ah (Tâm <-> Rót xuống Dưới trái) -->
+        <path d="M 150 315 L 110 395" class="mob-wire" />
+        <path d="M 150 315 L 110 395" class="mob-stream streamBat" stroke="var(--c-bat)" filter="url(#mGlowBat)" />
+
+        <!-- 4. Dây Inverter -> Tải Nhà (Tâm -> Rót xuống Dưới phải) -->
+        <path d="M 230 315 L 270 395" class="mob-wire" />
+        <path d="M 230 315 L 270 395" class="mob-stream streamLoad" stroke="var(--c-load)" filter="url(#mGlowLoad)" />
+      </svg>
+
+      <!-- 1. DÀN SOLAR (TRÊN TRÁI) -->
+      <section class="mob-node" id="mobPV">
+        <div class="mob-node-header">
+          <span class="mob-node-title">Dàn Solar</span>
+          <span style="font-size: 0.58rem; color: #64748b;">Nguồn</span>
+        </div>
+        <div class="mob-node-val valPV">0 W</div>
+      </section>
+
+      <!-- 2. ĐIỆN LƯỚI QUỐC GIA (TRÊN PHẢI) -->
+      <section class="mob-node" id="mobGrid">
+        <div class="mob-node-header">
+          <span class="mob-node-title">Điện Lưới</span>
+          <span style="font-size: 0.58rem; color: #64748b;" class="gridStatus">Bám tải</span>
+        </div>
+        <div class="mob-node-val valGrid">0 W</div>
+        <div style="font-size: 0.58rem; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px; margin-top: 3px;">
+          Kéo: <strong class="valGridInToday" style="color: #fff; font-family: var(--font-mono);">0.00 kWh</strong>
+        </div>
+      </section>
+
+      <!-- 3. INVERTER TRUNG TÂM -->
+      <section class="mob-core">
+        <div class="mob-ring"></div>
+        <span style="font-size: 0.6rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase;">Inverter</span>
+        <div class="inv-val valInv" style="font-size: 1.45rem; margin: 1px 0;">0.00 kW</div>
+        <div style="font-size: 0.62rem; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 8px; border-radius: 99px;">
+          Máy: <strong class="invTemp" style="color: #fff;">40</strong>°C
+        </div>
+      </section>
+
+      <!-- 4. PIN 294AH (DƯỚI TRÁI) -->
+      <section class="mob-node" id="mobBat">
+        <div class="mob-node-header">
+          <span class="mob-node-title">Pin 294Ah</span>
+          <span style="font-size: 0.6rem; color: #94a3b8;" class="batTemp">31°C</span>
+        </div>
+        <div class="mob-node-val valBat">0 W</div>
+        <div class="soc-track" style="margin-top: 4px; height: 4px;">
+          <div class="soc-fill socBar"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.62rem; color: #94a3b8; margin-top: 3px; font-weight: 600;">
+          <span class="batState" style="color: #10b981;">Standby</span>
+          <span class="socVal" style="color: #fff; font-family: var(--font-mono);">--%</span>
+        </div>
+        <div style="font-size: 0.58rem; color: #64748b; margin-top: 2px;">
+          SOH: <strong class="batSOH" style="color: #10b981;">100%</strong> | <strong class="batCycles" style="color: #fff;">8</strong> ck
+        </div>
+      </section>
+
+      <!-- 5. TẢI NHÀ HOME LOAD (DƯỚI PHẢI) -->
+      <section class="mob-node" id="mobLoad">
+        <div class="mob-node-header">
+          <span class="mob-node-title">Tải Nhà</span>
+          <span style="font-size: 0.58rem; color: #64748b;">Dùng</span>
+        </div>
+        <div class="mob-node-val valLoad">0 W</div>
+        <div style="font-size: 0.58rem; color: #64748b; margin-top: 5px;">Ưu tiên nuôi nhà</div>
+      </section>
+    </main>
+
+    <!-- METRICS THỐNG KÊ (2 X 2) -->
+    <section class="metrics-row">
+      <article class="metric-card">
+        <div class="metric-title">Điện dùng nhà hôm nay</div>
+        <div class="metric-num"><span id="mLoadToday" style="color: #38bdf8;">0.00</span><span class="metric-unit">kWh</span></div>
+        <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 4px;">
+          Tải TB: ~<strong id="mAvgLoad" style="color: #cbd5e1; font-family: var(--font-mono);">0 W</strong>
+        </div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-title">Sản lượng PV hôm nay</div>
+        <div class="metric-num"><span id="mToday">0.00</span><span class="metric-unit">kWh</span></div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-title">Tổng sản lượng tích lũy</div>
+        <div class="metric-num"><span id="mTotal">0.00</span><span class="metric-unit">kWh</span></div>
+      </article>
+      <article class="metric-card">
+        <div class="metric-title">Thời gian vận hành</div>
+        <div class="metric-num human" id="mHours">--</div>
+      </article>
+    </section>
+
+    <!-- FOOTER STATUS -->
+    <footer class="footer-bar">
+      <div>Fetch gần nhất: <strong id="fetchTime" style="color: #38bdf8;">--</strong></div>
+      <div>
+        Gói tin Inverter: <strong id="inverterTime" style="color: #38bdf8;">--</strong>
+        <span id="latencyBadge" class="tag-fresh">Đang kiểm tra</span>
+      </div>
+      <div>Chế độ: <span style="color: #34d399; font-weight: 600;">Self-Consumption (Tự dùng)</span></div>
+    </footer>
+
+  </div>
+
+  <script>
+    const BATTERY_AH = 294;
+    const NOMINAL_VOLTAGE = 51.2;
+    const TOTAL_RATED_CYCLES = 10000;
+    const FULL_CYCLE_KWH = 15.05;
+
+    function formatWatt(val) {
+      if (val === undefined || val === null || val === '') return '0 W';
+      let n = Math.abs(parseFloat(val));
+      if (isNaN(n) || n === 0) return '0 W';
+      if (n >= 1000) return (n / 1000).toFixed(2) + ' kW';
+      return Math.round(n) + ' W';
+    }
+
+    function normalizeKwh(val) {
+      if (val === undefined || val === null || val === '') return '0.00';
+      let n = parseFloat(val);
+      if (isNaN(n)) return '0.00';
+      if (n > 500) return (n / 1000).toFixed(2);
+      return n.toFixed(2);
+    }
+
+    function formatOperationTime(totalHoursRaw) {
+      let h = parseFloat(totalHoursRaw);
+      if (isNaN(h) || h <= 0) return '2.29k Hrs (~3 tháng 5 ngày)';
+
+      let days = Math.floor(h / 24);
+      let remainHours = Math.round(h % 24);
+      let years = Math.floor(days / 365);
+      let months = Math.floor((days % 365) / 30);
+      let remainDays = (days % 365) % 30;
+
+      let parts = [];
+      if (years > 0) parts.push(`${years} năm`);
+      if (months > 0) parts.push(`${months} tháng`);
+      if (remainDays > 0) parts.push(`${remainDays} ngày`);
+      if (remainHours > 0 || parts.length === 0) parts.push(`${remainHours} giờ`);
+
+      return `${parts.join(' ')} <span style="font-size: 0.8rem; color: #64748b; font-weight: normal;">(${Math.round(h)}h)</span>`;
+    }
+
+    function updateLatencyBadge(inverterTimeStr) {
+      const badge = document.getElementById('latencyBadge');
+      if (!inverterTimeStr) return;
+      const invDate = new Date(inverterTimeStr.replace(/-/g, '/'));
+      const diffMinutes = Math.round((new Date() - invDate) / 60000);
+
+      if (isNaN(diffMinutes) || diffMinutes < 2) {
+        badge.innerText = 'Thời gian thực';
+        badge.className = 'tag-fresh';
+      } else {
+        badge.innerText = `Trễ ~${diffMinutes} phút (Chờ dongle)`;
+        badge.className = 'tag-delayed';
+      }
+    }
+
+    function setAllText(className, text) {
+      document.querySelectorAll(`.${className}`).forEach(el => el.innerText = text);
+    }
+
+    function setAllClass(className, targetClass, add = true) {
+      document.querySelectorAll(`.${className}`).forEach(el => {
+        if (add) el.classList.add(targetClass);
+        else el.classList.remove(targetClass);
+      });
+    }
+
+    function getAccumulatedCycles(absPbatWatt, intervalSec = 10) {
+      const BASELINE_CYCLES = 8;
+      let storedCycles = parseFloat(localStorage.getItem('solar_bat_cycles'));
+      let storedKwhAccum = parseFloat(localStorage.getItem('solar_kwh_accum'));
+
+      if (isNaN(storedCycles) || storedCycles < BASELINE_CYCLES) {
+        storedCycles = BASELINE_CYCLES;
+        storedKwhAccum = 0;
+        localStorage.setItem('solar_bat_cycles', storedCycles);
+        localStorage.setItem('solar_kwh_accum', storedKwhAccum);
+      }
+
+      if (absPbatWatt > 50) {
+        let deltaKwh = (absPbatWatt * intervalSec) / (3600 * 1000);
+        storedKwhAccum += deltaKwh;
+
+        if (storedKwhAccum >= FULL_CYCLE_KWH) {
+          storedCycles += Math.floor(storedKwhAccum / FULL_CYCLE_KWH);
+          storedKwhAccum = storedKwhAccum % FULL_CYCLE_KWH;
+          localStorage.setItem('solar_bat_cycles', storedCycles);
+        }
+        localStorage.setItem('solar_kwh_accum', storedKwhAccum);
+      }
+      return storedCycles;
+    }
+
+    let countdown = 10;
+    setInterval(() => {
+      countdown--;
+      if (countdown <= 0) countdown = 10;
+      setAllText('valTimer', countdown);
+    }, 1000);
+
+    async function syncSolarData() {
+      try {
+        const res = await fetch('/api/live');
+        const json = await res.json();
+        countdown = 10;
+
+        document.getElementById('fetchTime').innerText = new Date().toLocaleTimeString('vi-VN');
+
+        const flow = json.flow || {};
+        const summaryObj = json.summary || {};
+        const summaryData = (summaryObj.data && typeof summaryObj.data === 'object') ? summaryObj.data : summaryObj;
+        const detail = json.detail || {};
+
+        // 1. Số liệu Nguồn điện
+        let ppv = parseFloat(flow.TotalDCpower ?? flow.ppv ?? detail.TotalDCpower ?? 0);
+        let pbatVal = parseFloat(flow.Pbat ?? flow.p_bat ?? 0);
+        let socVal = parseInt(flow.SOC ?? flow.soc ?? detail.SOC ?? 0);
+        let pgridVal = parseFloat(flow.gridCurrpac ?? flow.Pgrid ?? 0);
+
+        // 2. Home Load
+        let ploadVal = parseFloat(flow.loadCurrpac ?? flow.Pload ?? flow.pload ?? 0);
+        if (ploadVal === 0 && ppv > 0) {
+          let calculated = ppv - Math.abs(pbatVal) + (pgridVal > 0 ? pgridVal : 0);
+          ploadVal = calculated > 0 ? calculated : 0;
+        }
+
+        // 3. Công suất Inverter AC
+        let rawPac = summaryObj.Pac ?? summaryData.Pac ?? detail.CurrPac;
+        if (Array.isArray(rawPac)) rawPac = rawPac[0];
+        let pacVal = parseFloat(rawPac || 0);
+        if (pacVal === 0) pacVal = ppv > 0 ? ppv : (ploadVal + Math.abs(pbatVal));
+
+        let pacKw = pacVal > 100 ? (pacVal / 1000) : pacVal;
+        setAllText('valInv', `${pacKw.toFixed(2)} kW`);
+
+        // 4. Sản lượng & Thời gian
+        let etoday = detail.EToday ?? summaryData.e_today ?? summaryData.EToday;
+        let etotal = detail.ETotal ?? summaryData.e_total ?? summaryData.ETotal;
+        let htotal = detail.Htotal ?? 2296;
+        let time = detail.DataTime ?? summaryData.last_update_time ?? json.serverTime ?? new Date().toLocaleTimeString('vi-VN');
+
+        let eTodayVal = parseFloat(normalizeKwh(etoday));
+        document.getElementById('mToday').innerText = eTodayVal.toFixed(2);
+        document.getElementById('mTotal').innerText = normalizeKwh(etotal);
+        document.getElementById('mHours').innerHTML = formatOperationTime(htotal);
+
+        document.getElementById('inverterTime').innerText = time;
+        updateLatencyBadge(time);
+
+        // 5. Điện lưới hôm nay
+        let gridInToday = detail.E_Grid_Today ?? detail.e_grid_in_today ?? detail.E_buy_today ?? 
+                          detail.e_buy ?? summaryData.e_buy ?? flow.e_grid_in_today ?? 0;
+        let gridInTodayVal = parseFloat(normalizeKwh(gridInToday));
+        setAllText('valGridInToday', `${gridInTodayVal.toFixed(2)} kWh`);
+
+        // 6. Điện dùng nhà hôm nay
+        let rawLoadToday = detail.ELoadToday ?? detail.e_load_today ?? summaryData.e_load_today ?? flow.e_load_today;
+        let loadTodayKwh = 0;
+        if (rawLoadToday !== undefined && rawLoadToday !== null && rawLoadToday !== '') {
+          loadTodayKwh = parseFloat(normalizeKwh(rawLoadToday));
+        } else {
+          let estBatChargeKwh = (pbatVal < -30) ? (eTodayVal * 0.45) : (eTodayVal * 0.2);
+          loadTodayKwh = Math.max(0.5, (eTodayVal - estBatChargeKwh) + gridInTodayVal);
+        }
+
+        let now = new Date();
+        let hoursSinceMidnight = Math.max(1, now.getHours() + (now.getMinutes() / 60));
+        let avgLoadWatt = Math.round((loadTodayKwh * 1000) / hoursSinceMidnight);
+
+        document.getElementById('mLoadToday').innerText = loadTodayKwh.toFixed(2);
+        document.getElementById('mAvgLoad').innerText = `${avgLoadWatt} W`;
+
+        // 7. Cập nhật PV
+        setAllText('valPV', formatWatt(ppv));
+        setAllClass('streamPV', 'active', ppv > 20);
+
+        // 8. Cập nhật Grid
+        setAllText('valGrid', formatWatt(pgridVal));
+        if (Math.abs(pgridVal) > 20) {
+          setAllClass('streamGrid', 'active', true);
+          if (pgridVal < 0) {
+            setAllClass('streamGrid', 'reverse', true);
+            setAllText('gridStatus', 'Bán điện');
+          } else {
+            setAllClass('streamGrid', 'reverse', false);
+            setAllText('gridStatus', 'Lấy điện');
+          }
+        } else {
+          setAllClass('streamGrid', 'active', false);
+          setAllText('gridStatus', 'Bám tải (Zero)');
+        }
+
+        // 9. Cập nhật Load
+        setAllText('valLoad', formatWatt(ploadVal));
+        setAllClass('streamLoad', 'active', ploadVal > 20);
+
+        // 10. Cập nhật Battery & Cycles
+        let absPbatWatt = Math.abs(pbatVal);
+        setAllText('valBat', formatWatt(absPbatWatt));
+
+        let batVolt = parseFloat(flow.volt ?? flow.volt2 ?? detail.volt ?? NOMINAL_VOLTAGE);
+        if (isNaN(batVolt) || batVolt < 40 || batVolt > 65) batVolt = NOMINAL_VOLTAGE;
+        const totalBatteryKwh = (batVolt * BATTERY_AH) / 1000;
+
+        let currentCycles = getAccumulatedCycles(absPbatWatt, 10);
+        let cyclePercent = ((currentCycles / TOTAL_RATED_CYCLES) * 100).toFixed(2);
+
+        let rawSoh = flow.SOH ?? summaryObj.SOH ?? 100;
+        let sohVal = parseFloat(rawSoh);
+        if (isNaN(sohVal) || sohVal <= 0) sohVal = 100.0;
+        let degradationVal = (100 - sohVal).toFixed(1);
+
+        setAllText('batSOH', `${sohVal.toFixed(0)}%`);
+        setAllText('batDegradation', `${degradationVal}%`);
+        setAllText('batCycles', `${currentCycles}`);
+        setAllText('cyclePercentText', `${cyclePercent}%`);
+        document.querySelectorAll('.cycleBar').forEach(el => el.style.width = `${Math.max(1, cyclePercent * 10)}%`);
+
+        if (pbatVal < -30) {
+          setAllText('batState', 'Đang Sạc');
+          document.querySelectorAll('.batState').forEach(el => el.style.color = '#34d399');
+          setAllClass('streamBat', 'active', true);
+          setAllClass('streamBat', 'reverse', false);
+        } else if (pbatVal > 30) {
+          setAllText('batState', 'Đang Xả');
+          document.querySelectorAll('.batState').forEach(el => el.style.color = '#fbbf24');
+          setAllClass('streamBat', 'active', true);
+          setAllClass('streamBat', 'reverse', true);
+        } else {
+          setAllText('batState', 'Chờ (Standby)');
+          document.querySelectorAll('.batState').forEach(el => el.style.color = '#94a3b8');
+          setAllClass('streamBat', 'active', false);
+        }
+
+        if (socVal > 0) {
+          setAllText('socVal', `${socVal}%`);
+          document.querySelectorAll('.socBar').forEach(el => el.style.width = `${socVal}%`);
+        }
+
+        // 11. Cập nhật Nhiệt độ
+        let invTemp = summaryObj.Tntc ?? summaryData.Tntc ?? flow.Tntc;
+        setAllText('invTemp', invTemp ? parseFloat(invTemp).toFixed(0) : '40');
+
+        let batTemp = flow.BMS_temp ?? summaryObj.BMS_temp ?? 31;
+        setAllText('batTemp', `${batTemp}°C`);
+
+      } catch (err) {
+        console.error('Lỗi sync solar:', err);
+      }
+    }
+
+    syncSolarData();
+    setInterval(syncSolarData, 10000);
+  </script>
+</body>
+</html>
