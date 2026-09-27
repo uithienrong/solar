@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Senergy SE 6K - Pro Hybrid SCADA</title>
+  <title>Senergy SE 6K - Hybrid SCADA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -80,7 +80,7 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
     /* ==============================================================
-       1. DESKTOP SCADA STAGE (GIỮ NGUYÊN BỐ CỤC 3 CỘT ĐANG ĐẸP)
+       1. DESKTOP STAGE (CHUẨN 3 CỘT NGUYÊN BẢN)
        ============================================================== */
     #desktop-stage {
       position: relative;
@@ -100,32 +100,17 @@
       pointer-events: none;
       z-index: 1;
     }
-    .bus-wire {
-      stroke: rgba(255, 255, 255, 0.08);
-      stroke-width: 4;
-      fill: none;
-      stroke-linecap: round;
-    }
+    .bus-wire { stroke: rgba(255, 255, 255, 0.08); stroke-width: 4; fill: none; stroke-linecap: round; }
     .bus-flow {
-      stroke-width: 4;
-      stroke-linecap: round;
-      fill: none;
-      opacity: 0;
-      stroke-dasharray: 8 16;
-      transition: opacity 0.4s ease;
+      stroke-width: 4; stroke-linecap: round; fill: none; opacity: 0;
+      stroke-dasharray: 8 16; transition: opacity 0.4s ease;
       animation: busTravel 1.2s linear infinite;
     }
     .bus-flow.active { opacity: 1; }
     .bus-flow.reverse { animation: busTravelRev 1.2s linear infinite; }
 
-    @keyframes busTravel {
-      from { stroke-dashoffset: 48; }
-      to { stroke-dashoffset: 0; }
-    }
-    @keyframes busTravelRev {
-      from { stroke-dashoffset: 0; }
-      to { stroke-dashoffset: 48; }
-    }
+    @keyframes busTravel { from { stroke-dashoffset: 48; } to { stroke-dashoffset: 0; } }
+    @keyframes busTravelRev { from { stroke-dashoffset: 0; } to { stroke-dashoffset: 48; } }
 
     .dev-card {
       position: absolute;
@@ -150,22 +135,11 @@
     .dev-power { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 800; line-height: 1.1; }
 
     .dev-subinfo {
-      margin-top: 8px;
-      padding: 5px 8px;
-      border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+      margin-top: 8px; padding: 5px 8px; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;
     }
-    .subinfo-grid {
-      background: rgba(148, 163, 184, 0.08);
-      border: 1px solid rgba(148, 163, 184, 0.2);
-      color: #cbd5e1;
-    }
+    .subinfo-grid { background: rgba(148, 163, 184, 0.08); border: 1px solid rgba(148, 163, 184, 0.2); color: #cbd5e1; }
 
-    /* Toạ độ Desktop 3 Cột */
     #cardPV { top: 40px; left: 50px; width: 260px; border-color: rgba(245, 158, 11, 0.35); }
     #cardPV .dev-icon { background: var(--c-pv-bg); }
     #cardPV .dev-icon svg { fill: var(--c-pv); }
@@ -181,9 +155,7 @@
       background: radial-gradient(circle at 50% 30%, #1e1b4b 0%, #090e1c 100%);
       border: 1.5px solid rgba(99, 102, 241, 0.45);
       box-shadow: 0 0 40px rgba(99, 102, 241, 0.25);
-      text-align: center;
-      padding: 22px 20px;
-      border-radius: 22px;
+      text-align: center; padding: 22px 20px; border-radius: 22px;
     }
     .inv-chip {
       display: inline-flex; align-items: center; gap: 6px;
@@ -204,40 +176,17 @@
     #cardBat .dev-icon svg { fill: var(--c-bat); }
     #cardBat .dev-power { color: var(--c-bat); }
 
-    .soc-track {
-      background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 10px;
-    }
+    .soc-track { background: rgba(255, 255, 255, 0.08); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 10px; }
     .soc-fill { height: 100%; background: var(--c-bat); width: 0%; box-shadow: 0 0 10px var(--c-bat); transition: width 0.8s ease; }
     .bat-meta { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: #94a3b8; margin-top: 5px; }
 
     .battery-lifecycle-box {
-      margin-top: 8px;
-      padding: 6px 10px;
-      border-radius: 8px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
+      margin-top: 8px; padding: 6px 10px; border-radius: 8px;
+      background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
     }
-    .lifecycle-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: #94a3b8;
-      margin-bottom: 4px;
-    }
-    .cycle-bar-bg {
-      background: rgba(255, 255, 255, 0.06);
-      height: 4px;
-      border-radius: 2px;
-      overflow: hidden;
-    }
-    .cycle-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #10b981, #06b6d4);
-      width: 0%;
-      transition: width 0.8s ease;
-    }
+    .lifecycle-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.72rem; font-weight: 600; color: #94a3b8; margin-bottom: 4px; }
+    .cycle-bar-bg { background: rgba(255, 255, 255, 0.06); height: 4px; border-radius: 2px; overflow: hidden; }
+    .cycle-bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #06b6d4); width: 0%; transition: width 0.8s ease; }
 
     .est-badge {
       margin-top: 8px; padding: 5px 8px; border-radius: 6px;
@@ -245,7 +194,7 @@
       font-size: 0.72rem; color: #34d399; font-weight: 600; text-align: center;
     }
 
-    /* METRICS ROW THỐNG KÊ */
+    /* METRICS ROW CHUNG */
     .metrics-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -264,7 +213,6 @@
     .metric-num.human { font-family: var(--font-ui); font-size: 1.05rem; color: #38bdf8; font-weight: 600; line-height: 1.4; }
     .metric-unit { font-size: 0.9rem; color: #64748b; margin-left: 4px; font-family: var(--font-ui); }
 
-    /* FOOTER */
     .footer-bar {
       display: flex; justify-content: space-between; align-items: center;
       background: var(--card-bg); border: 1px solid var(--card-border);
@@ -272,18 +220,16 @@
       flex-wrap: wrap; gap: 8px;
     }
     .tag-fresh { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; }
-    .tag-delayed { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; }
 
     /* ==============================================================
-       2. MOBILE FLOW STAGE: THIẾT KẾ ĐỘC QUYỀN CHO MOBILE (<900px)
+       2. MOBILE FLOW STAGE: SOLAR & LƯỚI Ở TRÊN -> TẢI & PIN Ở DƯỚI
        ============================================================== */
-    #mobile-stage { display: none; } /* Mặc định ẩn trên Desktop */
+    #mobile-stage { display: none; }
 
     @media (max-width: 900px) {
       body { padding: 12px 10px 24px; }
       .container { max-width: 440px; }
 
-      /* Ẩn Desktop Stage, Kích hoạt Mobile Stage */
       #desktop-stage { display: none !important; }
       #mobile-stage {
         display: block !important;
@@ -291,33 +237,23 @@
         background: var(--card-bg);
         border: 1px solid var(--card-border);
         border-radius: 28px;
-        height: 480px;
+        height: 520px;
         box-shadow: 0 20px 45px -15px rgba(0,0,0,0.7);
         backdrop-filter: blur(24px);
         margin-bottom: 16px;
         overflow: hidden;
       }
 
-      /* SVG hạt chạy trên Mobile */
       .mob-flow-svg {
         position: absolute;
         top: 0; left: 0; width: 100%; height: 100%;
         pointer-events: none;
         z-index: 1;
       }
-      .mob-wire {
-        stroke: rgba(255, 255, 255, 0.08);
-        stroke-width: 4;
-        fill: none;
-        stroke-linecap: round;
-      }
+      .mob-wire { stroke: rgba(255, 255, 255, 0.08); stroke-width: 3.5; fill: none; stroke-linecap: round; }
       .mob-stream {
-        stroke-width: 4;
-        stroke-linecap: round;
-        fill: none;
-        opacity: 0;
-        stroke-dasharray: 8 16;
-        transition: opacity 0.4s ease;
+        stroke-width: 3.5; stroke-linecap: round; fill: none; opacity: 0;
+        stroke-dasharray: 8 16; transition: opacity 0.4s ease;
         animation: busTravel 1.2s linear infinite;
       }
       .mob-stream.active { opacity: 1; }
@@ -328,10 +264,10 @@
         position: absolute;
         top: 50%; left: 50%;
         transform: translate(-50%, -50%);
-        width: 140px; height: 140px;
+        width: 126px; height: 126px;
         border-radius: 50%;
         background: radial-gradient(circle at 40% 35%, #1e1b4b 0%, #080d1a 85%);
-        border: 2px solid rgba(99, 102, 241, 0.5);
+        border: 2px solid rgba(99, 102, 241, 0.55);
         box-shadow: 0 0 35px rgba(99, 102, 241, 0.35), inset 0 0 18px rgba(99, 102, 241, 0.25);
         display: flex;
         flex-direction: column;
@@ -342,7 +278,7 @@
       }
       .mob-ring {
         position: absolute;
-        top: -8px; left: -8px; right: -8px; bottom: -8px;
+        top: -6px; left: -6px; right: -6px; bottom: -6px;
         border: 1px dashed rgba(99, 102, 241, 0.35);
         border-radius: 50%;
         animation: spinCore 24s linear infinite;
@@ -350,40 +286,44 @@
       }
       @keyframes spinCore { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-      /* Các Node vệ tinh Mobile */
       .mob-node {
         position: absolute;
         transform: translate(-50%, -50%);
-        background: rgba(10, 15, 29, 0.9);
+        background: rgba(10, 15, 29, 0.94);
         border: 1px solid var(--card-border);
         border-radius: 16px;
-        padding: 8px 12px;
+        padding: 9px 12px;
         z-index: 2;
-        backdrop-filter: blur(12px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 8px 22px rgba(0,0,0,0.5);
       }
       .mob-node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-      .mob-node-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+      .mob-node-title { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; }
       .mob-node-val { font-family: var(--font-mono); font-size: 1.25rem; font-weight: 800; line-height: 1.1; }
 
-      /* Định vị 4 cục Mobile */
-      #mobPV { top: 14%; left: 50%; width: 170px; border-color: rgba(245, 158, 11, 0.35); text-align: center; }
+      /* ==============================================
+         TỌA ĐỘ 2 TRÊN (NGUỒN) - 1 GIỮA - 2 DƯỚI (ĐÍCH)
+         ============================================== */
+      /* 1. Solar (Trên Trái) */
+      #mobPV { top: 15%; left: 26%; width: 162px; border-color: rgba(245, 158, 11, 0.4); }
       #mobPV .mob-node-title { color: var(--c-pv); }
-      #mobPV .mob-node-val { color: var(--c-pv); text-shadow: 0 0 12px var(--c-pv-glow); }
+      #mobPV .mob-node-val { color: var(--c-pv); text-shadow: 0 0 12px rgba(245, 158, 11, 0.6); }
 
-      #mobBat { top: 50%; left: 24%; width: 155px; border-color: rgba(16, 185, 129, 0.35); }
-      #mobBat .mob-node-title { color: var(--c-bat); }
-      #mobBat .mob-node-val { color: var(--c-bat); text-shadow: 0 0 12px var(--c-bat-glow); }
-
-      #mobLoad { top: 50%; left: 76%; width: 155px; border-color: rgba(56, 189, 248, 0.35); }
-      #mobLoad .mob-node-title { color: var(--c-load); }
-      #mobLoad .mob-node-val { color: var(--c-load); text-shadow: 0 0 12px var(--c-load-glow); }
-
-      #mobGrid { top: 86%; left: 50%; width: 180px; border-color: rgba(148, 163, 184, 0.25); text-align: center; }
+      /* 2. Điện Lưới (Trên Phải) */
+      #mobGrid { top: 15%; left: 74%; width: 162px; border-color: rgba(148, 163, 184, 0.3); }
       #mobGrid .mob-node-title { color: #94a3b8; }
       #mobGrid .mob-node-val { color: #cbd5e1; }
 
-      /* Thẻ thống kê Mobile thành 2x2 */
+      /* 3. Pin 294Ah (Dưới Trái) */
+      #mobBat { top: 85%; left: 26%; width: 162px; border-color: rgba(16, 185, 129, 0.4); }
+      #mobBat .mob-node-title { color: var(--c-bat); }
+      #mobBat .mob-node-val { color: var(--c-bat); text-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
+
+      /* 4. Tải Nhà (Dưới Phải) */
+      #mobLoad { top: 85%; left: 74%; width: 162px; border-color: rgba(56, 189, 248, 0.4); }
+      #mobLoad .mob-node-title { color: var(--c-load); }
+      #mobLoad .mob-node-val { color: var(--c-load); text-shadow: 0 0 12px rgba(56, 189, 248, 0.6); }
+
       .metrics-row {
         grid-template-columns: 1fr 1fr !important;
         gap: 10px !important;
@@ -421,7 +361,7 @@
     </header>
 
     <!-- ==============================================================
-         STAGE 1: DÀNH RIÊNG CHO DESKTOP (3 CỘT SCADA TUYỆT ĐẸP)
+         1. DESKTOP STAGE (CHUẨN 3 CỘT KHÔNG ĐỔI)
          ============================================================== -->
     <main id="desktop-stage">
       <svg class="busbar-canvas" viewBox="0 0 1200 540">
@@ -445,7 +385,6 @@
         <path d="M 750 320 L 800 425 L 850 425" class="bus-flow streamBat" stroke="var(--c-bat)" filter="url(#glowBat)" />
       </svg>
 
-      <!-- 1. Solar PV Desktop -->
       <section class="dev-card" id="cardPV">
         <div class="dev-header">
           <div class="dev-title-wrap">
@@ -458,7 +397,6 @@
         <div class="dev-power valPV">0 W</div>
       </section>
 
-      <!-- 2. Grid Desktop -->
       <section class="dev-card" id="cardGrid">
         <div class="dev-header">
           <div class="dev-title-wrap">
@@ -476,14 +414,12 @@
         </div>
       </section>
 
-      <!-- 3. Inverter Core Desktop -->
       <section class="dev-card" id="cardInv">
         <div class="inv-chip">⚡ HYBRID INVERTER</div>
         <div class="inv-val valInv">0.00 kW</div>
         <div class="inv-sub">Nhiệt độ máy: <strong class="invTemp" style="color: #fff;">40</strong>°C</div>
       </section>
 
-      <!-- 4. Home Load Desktop -->
       <section class="dev-card" id="cardLoad">
         <div class="dev-header">
           <div class="dev-title-wrap">
@@ -496,7 +432,6 @@
         <div class="dev-power valLoad">0 W</div>
       </section>
 
-      <!-- 5. Battery Desktop -->
       <section class="dev-card" id="cardBat">
         <div class="dev-header">
           <div class="dev-title-wrap">
@@ -536,35 +471,35 @@
     </main>
 
     <!-- ==============================================================
-         STAGE 2: DÀNH RIÊNG CHO MOBILE (DIAMOND FLOW HẠT CHẠY 100%)
+         2. MOBILE STAGE: 2 TRÊN (NGUỒN) -> 1 GIỮA -> 2 DƯỚI (ĐÍCH)
          ============================================================== -->
     <main id="mobile-stage">
-      <svg class="mob-flow-svg" viewBox="0 0 380 480" preserveAspectRatio="none">
+      <svg class="mob-flow-svg" viewBox="0 0 380 520" preserveAspectRatio="none">
         <defs>
-          <filter id="mGlowPV"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(245, 158, 11, 0.7)"/></filter>
-          <filter id="mGlowBat"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(16, 185, 129, 0.7)"/></filter>
-          <filter id="mGlowLoad"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(56, 189, 248, 0.7)"/></filter>
-          <filter id="mGlowGrid"><feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="rgba(244, 63, 94, 0.7)"/></filter>
+          <filter id="mGlowPV"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(245, 158, 11, 0.75)"/></filter>
+          <filter id="mGlowBat"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(16, 185, 129, 0.75)"/></filter>
+          <filter id="mGlowLoad"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(56, 189, 248, 0.75)"/></filter>
+          <filter id="mGlowGrid"><feDropShadow dx="0" dy="0" stdDeviation="3.5" flood-color="rgba(244, 63, 94, 0.75)"/></filter>
         </defs>
 
-        <!-- Dây PV -> Inverter -->
-        <path d="M 190 95 L 190 170" class="mob-wire" />
-        <path d="M 190 95 L 190 170" class="mob-stream streamPV" stroke="var(--c-pv)" filter="url(#mGlowPV)" />
+        <!-- 1. Dây Solar -> Inverter (Trên trái -> Rót xuống Tâm) -->
+        <path d="M 110 120 L 150 205" class="mob-wire" />
+        <path d="M 110 120 L 150 205" class="mob-stream streamPV" stroke="var(--c-pv)" filter="url(#mGlowPV)" />
 
-        <!-- Dây Inverter <-> Pin -->
-        <path d="M 130 240 L 85 240" class="mob-wire" />
-        <path d="M 130 240 L 85 240" class="mob-stream streamBat" stroke="var(--c-bat)" filter="url(#mGlowBat)" />
+        <!-- 2. Dây Lưới <-> Inverter (Trên phải <-> Rót xuống Tâm) -->
+        <path d="M 270 120 L 230 205" class="mob-wire" />
+        <path d="M 270 120 L 230 205" class="mob-stream streamGrid" stroke="var(--c-grid-active)" filter="url(#mGlowGrid)" />
 
-        <!-- Dây Inverter -> Tải -->
-        <path d="M 250 240 L 295 240" class="mob-wire" />
-        <path d="M 250 240 L 295 240" class="mob-stream streamLoad" stroke="var(--c-load)" filter="url(#mGlowLoad)" />
+        <!-- 3. Dây Inverter <-> Pin 294Ah (Tâm <-> Rót xuống Dưới trái) -->
+        <path d="M 150 315 L 110 395" class="mob-wire" />
+        <path d="M 150 315 L 110 395" class="mob-stream streamBat" stroke="var(--c-bat)" filter="url(#mGlowBat)" />
 
-        <!-- Dây Inverter <-> Lưới -->
-        <path d="M 190 310 L 190 385" class="mob-wire" />
-        <path d="M 190 310 L 190 385" class="mob-stream streamGrid" stroke="var(--c-grid-active)" filter="url(#mGlowGrid)" />
+        <!-- 4. Dây Inverter -> Tải Nhà (Tâm -> Rót xuống Dưới phải) -->
+        <path d="M 230 315 L 270 395" class="mob-wire" />
+        <path d="M 230 315 L 270 395" class="mob-stream streamLoad" stroke="var(--c-load)" filter="url(#mGlowLoad)" />
       </svg>
 
-      <!-- 1. Node Solar Mobile -->
+      <!-- 1. DÀN SOLAR (TRÊN TRÁI) -->
       <section class="mob-node" id="mobPV">
         <div class="mob-node-header">
           <span class="mob-node-title">Dàn Solar</span>
@@ -573,17 +508,29 @@
         <div class="mob-node-val valPV">0 W</div>
       </section>
 
-      <!-- 2. Core Inverter Mobile -->
+      <!-- 2. ĐIỆN LƯỚI QUỐC GIA (TRÊN PHẢI) -->
+      <section class="mob-node" id="mobGrid">
+        <div class="mob-node-header">
+          <span class="mob-node-title">Điện Lưới</span>
+          <span style="font-size: 0.58rem; color: #64748b;" class="gridStatus">Bám tải</span>
+        </div>
+        <div class="mob-node-val valGrid">0 W</div>
+        <div style="font-size: 0.58rem; color: #94a3b8; background: rgba(255,255,255,0.05); padding: 2px 4px; border-radius: 4px; margin-top: 3px;">
+          Kéo: <strong class="valGridInToday" style="color: #fff; font-family: var(--font-mono);">0.00 kWh</strong>
+        </div>
+      </section>
+
+      <!-- 3. INVERTER TRUNG TÂM -->
       <section class="mob-core">
         <div class="mob-ring"></div>
-        <span style="font-size: 0.62rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase;">Inverter</span>
-        <div class="inv-val valInv" style="font-size: 1.5rem; margin: 2px 0;">0.00 kW</div>
-        <div style="font-size: 0.65rem; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 8px; border-radius: 99px;">
+        <span style="font-size: 0.6rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase;">Inverter</span>
+        <div class="inv-val valInv" style="font-size: 1.45rem; margin: 1px 0;">0.00 kW</div>
+        <div style="font-size: 0.62rem; color: #94a3b8; background: rgba(255,255,255,0.08); padding: 1px 8px; border-radius: 99px;">
           Máy: <strong class="invTemp" style="color: #fff;">40</strong>°C
         </div>
       </section>
 
-      <!-- 3. Node Pin Mobile -->
+      <!-- 4. PIN 294AH (DƯỚI TRÁI) -->
       <section class="mob-node" id="mobBat">
         <div class="mob-node-header">
           <span class="mob-node-title">Pin 294Ah</span>
@@ -602,30 +549,18 @@
         </div>
       </section>
 
-      <!-- 4. Node Tải Mobile -->
+      <!-- 5. TẢI NHÀ HOME LOAD (DƯỚI PHẢI) -->
       <section class="mob-node" id="mobLoad">
         <div class="mob-node-header">
           <span class="mob-node-title">Tải Nhà</span>
           <span style="font-size: 0.58rem; color: #64748b;">Dùng</span>
         </div>
         <div class="mob-node-val valLoad">0 W</div>
-        <div style="font-size: 0.58rem; color: #64748b; margin-top: 4px;">Ưu tiên nuôi nhà</div>
-      </section>
-
-      <!-- 5. Node Lưới Mobile -->
-      <section class="mob-node" id="mobGrid">
-        <div class="mob-node-header">
-          <span class="mob-node-title">Điện Lưới</span>
-          <span style="font-size: 0.58rem; color: #64748b;" class="gridStatus">Bám tải</span>
-        </div>
-        <div class="mob-node-val valGrid">0 W</div>
-        <div style="font-size: 0.62rem; color: #94a3b8; background: rgba(255,255,255,0.04); padding: 2px 6px; border-radius: 4px; margin-top: 2px;">
-          Kéo hôm nay: <strong class="valGridInToday" style="color: #fff; font-family: var(--font-mono);">0.00 kWh</strong>
-        </div>
+        <div style="font-size: 0.58rem; color: #64748b; margin-top: 5px;">Ưu tiên nuôi nhà</div>
       </section>
     </main>
 
-    <!-- METRICS THỐNG KÊ (DÙNG CHUNG CẢ PC & MOBILE) -->
+    <!-- METRICS THỐNG KÊ (2 X 2) -->
     <section class="metrics-row">
       <article class="metric-card">
         <div class="metric-title">Điện dùng nhà hôm nay</div>
@@ -716,7 +651,6 @@
       }
     }
 
-    // Helper gán đồng thời cho cả giao diện Desktop và Mobile
     function setAllText(className, text) {
       document.querySelectorAll(`.${className}`).forEach(el => el.innerText = text);
     }
@@ -751,7 +685,6 @@
         }
         localStorage.setItem('solar_kwh_accum', storedKwhAccum);
       }
-
       return storedCycles;
     }
 
@@ -800,7 +733,7 @@
         // 4. Sản lượng & Thời gian
         let etoday = detail.EToday ?? summaryData.e_today ?? summaryData.EToday;
         let etotal = detail.ETotal ?? summaryData.e_total ?? summaryData.ETotal;
-        let htotal = detail.Htotal ?? 2290;
+        let htotal = detail.Htotal ?? 2296;
         let time = detail.DataTime ?? summaryData.last_update_time ?? json.serverTime ?? new Date().toLocaleTimeString('vi-VN');
 
         let eTodayVal = parseFloat(normalizeKwh(etoday));
@@ -834,11 +767,11 @@
         document.getElementById('mLoadToday').innerText = loadTodayKwh.toFixed(2);
         document.getElementById('mAvgLoad').innerText = `${avgLoadWatt} W`;
 
-        // 7. Cập nhật PV & Luồng hạt
+        // 7. Cập nhật PV
         setAllText('valPV', formatWatt(ppv));
         setAllClass('streamPV', 'active', ppv > 20);
 
-        // 8. Cập nhật Grid & Luồng hạt
+        // 8. Cập nhật Grid
         setAllText('valGrid', formatWatt(pgridVal));
         if (Math.abs(pgridVal) > 20) {
           setAllClass('streamGrid', 'active', true);
@@ -854,11 +787,11 @@
           setAllText('gridStatus', 'Bám tải (Zero)');
         }
 
-        // 9. Cập nhật Home Load & Luồng hạt
+        // 9. Cập nhật Load
         setAllText('valLoad', formatWatt(ploadVal));
         setAllClass('streamLoad', 'active', ploadVal > 20);
 
-        // 10. Cập nhật Battery, EFC Cycles & Luồng hạt
+        // 10. Cập nhật Battery & Cycles
         let absPbatWatt = Math.abs(pbatVal);
         setAllText('valBat', formatWatt(absPbatWatt));
 
@@ -884,42 +817,16 @@
           setAllText('batState', 'Đang Sạc');
           document.querySelectorAll('.batState').forEach(el => el.style.color = '#34d399');
           setAllClass('streamBat', 'active', true);
-          setAllClass('streamBat', 'reverse', false); // Chiều Inverter -> Pin
-
-          if (socVal < 100 && absPbatWatt > 50) {
-            let remainKwh = totalBatteryKwh * ((100 - socVal) / 100);
-            let totalMins = Math.round((remainKwh / (absPbatWatt / 1000)) * 60);
-            let finishTime = new Date(Date.now() + totalMins * 60000).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-            let h = Math.floor(totalMins / 60);
-            let m = totalMins % 60;
-            setAllText('chargeEstimate', `Đầy sau: ~${h > 0 ? h + 'h ' : ''}${m}p (${finishTime})`);
-            document.querySelectorAll('.chargeEstimate').forEach(el => el.style.display = 'block');
-          } else if (socVal >= 100) {
-            setAllText('chargeEstimate', 'Pin đã đầy (100%)');
-            document.querySelectorAll('.chargeEstimate').forEach(el => el.style.display = 'block');
-          }
+          setAllClass('streamBat', 'reverse', false);
         } else if (pbatVal > 30) {
           setAllText('batState', 'Đang Xả');
           document.querySelectorAll('.batState').forEach(el => el.style.color = '#fbbf24');
           setAllClass('streamBat', 'active', true);
-          setAllClass('streamBat', 'reverse', true); // Chiều Pin -> Inverter
-
-          if (socVal > 20 && absPbatWatt > 50) {
-            let usableKwh = totalBatteryKwh * ((socVal - 20) / 100);
-            let totalMins = Math.round((usableKwh / (absPbatWatt / 1000)) * 60);
-            let h = Math.floor(totalMins / 60);
-            let m = totalMins % 60;
-            setAllText('chargeEstimate', `Dùng được: ~${h > 0 ? h + 'h ' : ''}${m}p (về 20%)`);
-            document.querySelectorAll('.chargeEstimate').forEach(el => el.style.display = 'block');
-          } else {
-            setAllText('chargeEstimate', 'Pin sắp cạn (<20%)');
-            document.querySelectorAll('.chargeEstimate').forEach(el => el.style.display = 'block');
-          }
+          setAllClass('streamBat', 'reverse', true);
         } else {
           setAllText('batState', 'Chờ (Standby)');
           document.querySelectorAll('.batState').forEach(el => el.style.color = '#94a3b8');
           setAllClass('streamBat', 'active', false);
-          document.querySelectorAll('.chargeEstimate').forEach(el => el.style.display = 'none');
         }
 
         if (socVal > 0) {
